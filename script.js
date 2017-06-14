@@ -1,4 +1,5 @@
 "use strict";
+var objects = [];
 var cubes = [];
 var edges = [];
 var opacity = 0;
@@ -97,14 +98,17 @@ function drawCubes(n, dim, gap) {
         edge.position.x = obj.position.x;
         edge.position.y = obj.position.y;
         edge.position.z = obj.position.z;
+        var c = new THREE.Group();
+        c.add(obj);
+        c.add(edge);
         cubes.push(obj);
-        edges.push(edge);
-        scene.add(edge);
-        scene.add(obj);
+        objects.push(c);
+        scene.add(c);
       }
     }
   }
 }
+
 
 function getIntersects(event) {
   var raycaster = new THREE.Raycaster();
@@ -114,8 +118,8 @@ function getIntersects(event) {
   click.x = 2 * (event.clientX - offset) / (canvas.width)- 1;
   click.y =  - (2 * (event.clientY - offset) / canvas.height - 1);
   raycaster.setFromCamera(click, camera);
-  var intersects = raycaster.intersectObjects(cubes);
-  return intersects;
+  var intersects = raycaster.intersectObjects(cubes, true);
+  return intersects.length > 0 ? intersects[0] : false;
 }
 
 function reset() {
@@ -135,23 +139,16 @@ function update() {
   camera.updateProjectionMatrix();
 }
 
+var arr = [];
 function onClick(event) {
   var intersects = getIntersects(event);
-  if(intersects.length > 0) {
+  if(intersects) {
     controls.enabled = false;
-    var i;
-    for(i = 0; i < intersects.length; i++) {
-      var cube = intersects[i].object;
-      cube.material.color = hitColor;
-      cube.material.opacity = 0.1;
-      var index = getCubeIndex(cube);
-      edges[index].material.opacity = 0.1;
-    }
-    var pos = camera.position;
-    var start = new THREE.Vector3(pos.x, pos.y, pos.z);
-    var end = intersects[i-1].point;
-  }
+    arr.push(intersects);
+   }
 }
+
+
 
 function getCubeIndex(cube) {
   var res = -1;
@@ -172,4 +169,42 @@ function anim() {
    requestAnimationFrame(anim);
    controls.update();
    render();
+}
+
+var rotate = document.getElementById('rotate');
+rotate.onclick = function(){rotateGroup(arr);};
+var group;
+var ax;
+function rotateGroup(a) {
+  console.log("inside rotateGroup")
+  var normal = a[0].face.normal;
+  ax = normal;
+  group = new THREE.Group();
+
+  for(var i = 0; i < a.length; i++) {
+    var cube = a[i].object;
+    var index = getCubeIndex(cube);
+    group.add(objects[index]);
+  }
+
+  console.log(group.rotation);
+  
+  var angle = getAngleOnAxis(group, normal);
+  group.rotateOnAxis(normal, angle +  Math.PI / 4)
+  console.log(group.rotation);
+  scene.add(group);
+  //arr = []
+}
+
+function getAngleOnAxis(g, axis) {
+  var res = 0;
+  if(axis.x != 0) {
+    return g.rotation._x;
+  }
+  else if(axis.y != 0) {
+    return g.rotation._y
+  }
+  else if(axis.z != 0) {
+    return g.rotation._z
+  }
 }
