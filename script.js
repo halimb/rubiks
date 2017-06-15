@@ -5,6 +5,8 @@ var edges = [];
 var opacity = 0;
 var autoRot = false;
 var block = true;
+var scene, camera, renderer, controls, light, 
+    light2, axis, ambient, group, angle = 0, indexOffset;
 var clearColor = new THREE.Color(0xffeb3b);
 var cubeColor = new THREE.Color(0xfff9c4 );
 var hitColor = new THREE.Color(0x000000);
@@ -12,9 +14,10 @@ var lineColor = new THREE.Color(0xaaffaa/*0xff5016*/);
 var edgeColor = new THREE.Color(0x555555);
 var canvas = document.getElementById("cnv");
 var resetBtn = document.getElementById("reset");
-var scene, camera, renderer, controls, light, light2, axis, ambient;
+var rotate = document.getElementById('rotate');
+
 //Block arrangement params
-var rows = 3; var dim = 4; var gap = .5;
+var rows = 3; var dim = 4; var gap = 3;
 //Random arrangement params
 var n = 100; var maxDim = 4; var scope = 50;
 
@@ -24,6 +27,7 @@ anim();
 window.addEventListener("resize", update);
 canvas.addEventListener("mousedown", onClick);
 document.addEventListener("mouseup", mouseUp);
+rotate.onclick = function(){rotateGroup(arr);};
 resetBtn.onclick = reset;
 
 
@@ -76,12 +80,15 @@ function drawCubes(n, dim, gap) {
   var step = dim + gap;
   var length = n * step - gap;
   var offset = length / 2;
+  var op = .7;
+  indexOffset = scene.children.length;
   for(var i = 0; i < n; i++) {
     for(var j = 0; j < n; j++) {
       for(var k = 0; k < n; k++) {
         var mat = new THREE.MeshPhongMaterial({color: cubeColor,
                                                transparent: true,
-                                               shininess: 70});
+                                               //shininess: 70,
+                                               opacity: op});
         var geo = new THREE.BoxGeometry(dim, dim, dim);
         var edgesGeo = new THREE.EdgesGeometry(geo);
         var edge = new THREE.LineSegments(
@@ -131,6 +138,7 @@ function reset() {
   scene.add(axis);
   cubes = [];
   edges = []; 
+  objects = [];
   drawCubes(rows, dim, gap);
 }
 
@@ -148,19 +156,6 @@ function onClick(event) {
    }
 }
 
-
-
-function getCubeIndex(cube) {
-  var res = -1;
-  for(var i = 0; i < cubes.length; i++) {
-    if(cubes[i] == cube) {
-      res = i;
-      break;
-    }
-  }
-  return i;
-}
-
 function mouseUp() {
   controls.enabled = true;
 }
@@ -171,29 +166,20 @@ function anim() {
    render();
 }
 
-var rotate = document.getElementById('rotate');
-rotate.onclick = function(){rotateGroup(arr);};
-var group;
-var ax;
 function rotateGroup(a) {
   console.log("inside rotateGroup")
   var normal = a[0].face.normal;
-  ax = normal;
   group = new THREE.Group();
 
   for(var i = 0; i < a.length; i++) {
     var cube = a[i].object;
-    var index = getCubeIndex(cube);
+    var index = i + indexOffset;
     group.add(objects[index]);
   }
-
-  console.log(group.rotation);
-  
-  var angle = getAngleOnAxis(group, normal);
   group.rotateOnAxis(normal, angle +  Math.PI / 4)
-  console.log(group.rotation);
+  angle = getAngleOnAxis(group, normal);
   scene.add(group);
-  //arr = []
+  arr = []
 }
 
 function getAngleOnAxis(g, axis) {
@@ -207,4 +193,43 @@ function getAngleOnAxis(g, axis) {
   else if(axis.z != 0) {
     return g.rotation._z
   }
+}
+
+function getGroup(normal, i) {
+  var axes = ['x', 'y', 'z'];
+  var index = dot(normal, [0,1,2]);
+  var axis = axes[index];
+
+  switch(axis) {
+    case 'x':
+
+      break;
+
+    case 'y':
+
+      break; 
+
+    case 'z':
+
+      break;
+
+    default:
+
+      break;
+  }
+}
+
+function hideCube(n) {
+  var children = scene.children;
+  children[n + indexOffset].visible = false;
+}
+
+function dot(u, v) {
+  var res = 0;
+  if(u.length == v.length) {
+    for(var i = 0; i < u.length; i++) {
+      res += u[i] * v[i];
+    }
+  }
+  return res;
 }
