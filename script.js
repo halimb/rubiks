@@ -166,16 +166,16 @@ function anim() {
    render();
 }
 
-function rotateGroup(a) {
-  console.log("inside rotateGroup")
-  var normal = a[0].face.normal;
-  group = new THREE.Group();
+function rotateGroup(group, a) {
+  // console.log("inside rotateGroup")
+  // var normal = a[0].face.normal;
+  // group = new THREE.Group();
 
-  for(var i = 0; i < a.length; i++) {
-    var cube = a[i].object;
-    var index = i + indexOffset;
-    group.add(objects[index]);
-  }
+  // for(var i = 0; i < a.length; i++) {
+  //   var cube = a[i].object;
+  //   var index = i + indexOffset;
+  //   group.add(objects[index]);
+  // }
   group.rotateOnAxis(normal, angle +  Math.PI / 4)
   angle = getAngleOnAxis(group, normal);
   scene.add(group);
@@ -196,13 +196,20 @@ function getAngleOnAxis(g, axis) {
 }
 
 function getGroup(normal, i) {
-  var axes = ['x', 'y', 'z'];
+  var group = new THREE.Group();
   var index = dot(normal, [0,1,2]);
+  var axes = ['x', 'y', 'z'];
   var axis = axes[index];
 
   switch(axis) {
     case 'x':
-
+      for(var j = 0; j < rows; j++) {
+        for(var k = 0; k < rows; k++) {
+          index = i * rows * rows + k + j * rows;
+          hideCube(index)
+          // group.add(scene.children[index + indexOffset])
+        }
+      }
       break;
 
     case 'y':
@@ -217,11 +224,15 @@ function getGroup(normal, i) {
 
       break;
   }
+  return group;
 }
 
+
+var gr = new THREE.Group();
 function hideCube(n) {
   var children = scene.children;
-  children[n + indexOffset].visible = false;
+  gr.add(children[n + indexOffset]);
+  //children[n + indexOffset].visible = false;
 }
 
 function dot(u, v) {
@@ -233,3 +244,4 @@ function dot(u, v) {
   }
   return res;
 }
+
