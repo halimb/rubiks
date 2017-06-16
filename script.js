@@ -200,17 +200,27 @@ function getGroup(normal, i) {
       for(var j = 0; j < rows; j++) {
         for(var k = 0; k < rows; k++) {
           var index = i * rows * rows + k + j * rows;
-          group.add(objects[index])
+          group.add(objects[index]);
         }
       }
       break;
 
     case 'y':
-
+      for(var j = 0; j < rows; j++) {
+        for(var k = 0; k < rows; k++) {
+          var index = rows * i + rows * rows * j + k;
+          group.add(objects[index]);
+        }
+      }
       break; 
 
     case 'z':
-
+        for(var j = 0; j < rows; j++) {
+          for(var k = 0; k < rows; k++) {
+            var index = i + rows * rows * k + j * rows;
+            group.add(objects[index]);
+          }
+        }
       break;
 
     default:
