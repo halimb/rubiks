@@ -11,7 +11,7 @@ var clearColor = new THREE.Color(0xffeb3b);
 var cubeColor = new THREE.Color(0xfff9c4 );
 var hitColor = new THREE.Color(0x000000);
 var lineColor = new THREE.Color(0xaaffaa/*0xff5016*/);
-var edgeColor = new THREE.Color(0x555555);
+var edgeColor = new THREE.Color(0x000);
 var canvas = document.getElementById("cnv");
 var resetBtn = document.getElementById("reset");
 var rotate = document.getElementById('rotate');
@@ -46,7 +46,7 @@ function init() {
   light2.position.set(-40, -40, -40);
 
   ambient = new THREE.AmbientLight(0xffffff);
-  ambient.intensity = 0.4;
+  ambient.intensity = 0.65;
 
   //Renderer
   renderer = new THREE.WebGLRenderer( { canvas: canvas,
@@ -98,7 +98,7 @@ function drawCubes(n, dim, gap) {
                             new THREE.LineBasicMaterial(
                                     { color: edgeColor,
                                       transparent: true,
-                                      linewidth: 2})
+                                      linewidth: 3})
                                          );
         var obj = new THREE.Mesh(geo, mat);
         obj.position.x = i * step - offset + dim / 2;
@@ -213,22 +213,24 @@ function anim() {
 function rotateGroup(group, axis, dir) {
   var angle = 0;
   var incr = dir * .04;
-  function anim() {
-      scene.add(group);
-    angle += incr;
-    if(Math.abs(angle) < Math.PI / 2) {
-      group.rotateOnAxis(axis, incr);
-      requestAnimationFrame(anim);
+  function animGroup() {
+      angle += incr;
+      if(Math.abs(angle) < Math.PI / 2) {
+        group.rotateOnAxis(axis, incr);
+        requestAnimationFrame(animGroup);
+        //scene.add(group);
+      }
+      else {
+        var theta = getAngleOnAxis(group, axis);
+        var delta = Math.PI/2 - Math.abs(theta);
+        group.rotateOnAxis(axis, dir * delta);
+      }
     }
-    else {
-      group.rotateOnAxis(axis, Math.PI / 2);
-    }
-  }
-  
   axis.x = Math.abs(axis.x);
   axis.y = Math.abs(axis.y);
   axis.z = Math.abs(axis.z);
-  anim();
+  scene.add(group);
+  animGroup();
   arr = []
 }
 
@@ -244,8 +246,6 @@ function getAngleOnAxis(g, axis) {
     return g.rotation._z
   }
 }
-
-
 
 function getGroup(normal, i) {
   var group = new THREE.Group();
