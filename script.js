@@ -18,6 +18,7 @@ var rotate = document.getElementById('rotate');
 
 //Block arrangement params
 var rows = 3; var dim = 4; var gap = 3;
+var step = dim + gap;
 //Random arrangement params
 var n = 100; var maxDim = 4; var scope = 50;
 
@@ -153,6 +154,11 @@ function onClick(event) {
   if(intersects) {
     controls.enabled = false;
     arr.push(intersects);
+    
+    console.log(intersects.face.normal);
+    console.log(intersects.object.position);
+    console.log('\n');
+   
    }
 }
 
@@ -166,48 +172,39 @@ function anim() {
    render();
 }
 
-function rotateGroup(group, a) {
+function rotateGroup(group, axis, angle) {
   // console.log("inside rotateGroup")
   // var normal = a[0].face.normal;
-  // group = new THREE.Group();
 
-  // for(var i = 0; i < a.length; i++) {
-  //   var cube = a[i].object;
-  //   var index = i + indexOffset;
-  //   group.add(objects[index]);
-  // }
-  group.rotateOnAxis(normal, angle +  Math.PI / 4)
-  angle = getAngleOnAxis(group, normal);
+  group.rotateOnAxis(axis, angle)
+  // angle = getAngleOnAxis(group, normal);
   scene.add(group);
   arr = []
 }
 
-function getAngleOnAxis(g, axis) {
-  var res = 0;
-  if(axis.x != 0) {
-    return g.rotation._x;
-  }
-  else if(axis.y != 0) {
-    return g.rotation._y
-  }
-  else if(axis.z != 0) {
-    return g.rotation._z
-  }
-}
+// function getAngleOnAxis(g, axis) {
+//   var res = 0;
+//   if(axis.x != 0) {
+//     return g.rotation._x;
+//   }
+//   else if(axis.y != 0) {
+//     return g.rotation._y
+//   }
+//   else if(axis.z != 0) {
+//     return g.rotation._z
+//   }
+// }
 
 function getGroup(normal, i) {
   var group = new THREE.Group();
-  var index = dot(normal, [0,1,2]);
-  var axes = ['x', 'y', 'z'];
-  var axis = axes[index];
+  var axis = getAxis(normal);
 
   switch(axis) {
     case 'x':
       for(var j = 0; j < rows; j++) {
         for(var k = 0; k < rows; k++) {
           index = i * rows * rows + k + j * rows;
-          hideCube(index)
-          // group.add(scene.children[index + indexOffset])
+          group.add(objects[index])
         }
       }
       break;
@@ -224,24 +221,49 @@ function getGroup(normal, i) {
 
       break;
   }
+  scene.add(group);
   return group;
 }
 
 
-var gr = new THREE.Group();
+
 function hideCube(n) {
   var children = scene.children;
-  gr.add(children[n + indexOffset]);
-  //children[n + indexOffset].visible = false;
+  objects[n].visible = false;
 }
 
-function dot(u, v) {
+function getAxis(normal) {
   var res = 0;
-  if(u.length == v.length) {
-    for(var i = 0; i < u.length; i++) {
-      res += u[i] * v[i];
+  for(var key in normal) {
+    if(normal[key] != 0) {
+      res = key;
+      break;
     }
   }
   return res;
 }
 
+
+function getMove(faceA, faceB) {
+  var res = 0;
+  var nA = faceA.normal;
+  var nB = faceB.normal;
+  if(nA == nB) {
+    var dir = {
+          x: (faceA.x - faceB.x) / step,
+          y: (faceA.y - faceB.y) / step,
+          z: (faceA.z - faceB.z) / step
+        } 
+    res = dot(dir, nA);
+  }
+  return res;
+}
+
+//Cross product
+function dot(u, v) {
+  return {
+    x: (u.y*v.z - u.z*v.y),
+    y: (u.z*v.x - u.x*v.z),
+    z: (u.x*v.y - u.y*v.x) 
+  }
+}
