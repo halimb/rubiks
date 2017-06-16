@@ -17,7 +17,7 @@ var resetBtn = document.getElementById("reset");
 var rotate = document.getElementById('rotate');
 
 //Block arrangement params
-var rows = 3; var dim = 4; var gap = 3;
+var rows = 3; var dim = 4; var gap = 0;
 var step = dim + gap;
 //Random arrangement params
 var n = 100; var maxDim = 4; var scope = 50;
@@ -28,7 +28,7 @@ anim();
 window.addEventListener("resize", update);
 canvas.addEventListener("mousedown", onClick);
 document.addEventListener("mouseup", mouseUp);
-rotate.onclick = function(){rotateGroup(arr);};
+rotate.onclick = function(){makeMove(arr[0], arr[1]);};
 resetBtn.onclick = reset;
 
 
@@ -76,18 +76,19 @@ function render() {
    update();
    renderer.render(scene, camera);
 }
-
+var myc;
 function drawCubes(n, dim, gap) {
   var step = dim + gap;
   var length = n * step - gap;
   var offset = length / 2;
-  var op = .7;
+  var op = 1;
   indexOffset = scene.children.length;
   for(var i = 0; i < n; i++) {
     for(var j = 0; j < n; j++) {
       for(var k = 0; k < n; k++) {
         var mat = new THREE.MeshPhongMaterial({color: cubeColor,
                                                transparent: true,
+                                               vertexColors: THREE.FaceColors,
                                                //shininess: 70,
                                                opacity: op});
         var geo = new THREE.BoxGeometry(dim, dim, dim);
@@ -103,6 +104,13 @@ function drawCubes(n, dim, gap) {
         obj.position.x = i * step - offset + dim / 2;
         obj.position.y = j * step - offset + dim / 2;
         obj.position.z = k * step - offset + dim / 2;
+
+        myc = obj;
+        for(var p = 0; p < obj.geometry.faces.length; p++) {
+          obj.geometry.faces[p].color = getFaceColor(p);
+        }
+        
+        
         edge.position.x = obj.position.x;
         edge.position.y = obj.position.y;
         edge.position.z = obj.position.z;
@@ -114,6 +122,41 @@ function drawCubes(n, dim, gap) {
         scene.add(c);
       }
     }
+  }
+}
+
+function getFaceColor(i) {
+  switch(i) {
+    case 0:
+    case 1:
+      return {r: 1,
+              g: 0,
+              b: 0 };
+    case 2:
+    case 3:
+      return {r: 0,
+              g: 1,
+              b: 0 };
+    case 4:
+    case 5:
+      return {r: 0,
+              g: 0,
+              b: 1 };
+    case 6:
+    case 7:
+      return {r: 1,
+              g: 1,
+              b: 0 };
+    case 8:
+    case 9:
+      return {r: 1,
+              g: 1,
+              b: 1 };
+    case 10:
+    case 11:
+      return {r: 1,
+              g: .5,
+              b: 0 };
   }
 }
 
@@ -167,15 +210,39 @@ function anim() {
    render();
 }
 
-function rotateGroup(group, axis, angle) {
-  // var normal = a[0].face.normal;
+function rotateGroup(group, axis, dir) {
+  var angle = 0;
+  var incr = dir * .04;
+  function anim() {
+      scene.add(group);
+    angle += incr;
+    if(Math.abs(angle) < Math.PI / 2) {
+      group.rotateOnAxis(axis, incr);
+      requestAnimationFrame(anim);
+    }
+    else {
+      group.rotateOnAxis(axis, Math.PI / 2);
+    }
+  }
+  
   axis.x = Math.abs(axis.x);
   axis.y = Math.abs(axis.y);
   axis.z = Math.abs(axis.z);
-  group.rotateOnAxis(axis, angle)
-  // angle = getAngleOnAxis(group, normal);
-  scene.add(group);
+  anim();
   arr = []
+}
+
+function getAngleOnAxis(g, axis) {
+  var res = 0;
+  if(axis.x != 0) {
+    return g.rotation._x;
+  }
+  if(axis.y != 0) {
+    return g.rotation._y
+  }
+  if(axis.z != 0) {
+    return g.rotation._z
+  }
 }
 
 
@@ -204,7 +271,7 @@ function getGroup(normal, i) {
     }
   }
 
-  scene.add(group);
+ //scene.add(group);
   return group;
 }
 
@@ -254,7 +321,7 @@ function makeMove(intersectA, intersectB) {
   console.log(dir)
   console.log(normal)
   var g = getGroup(normal, index);
-  rotateGroup(g, normal, dir * Math.PI / 10);
+  rotateGroup(g, normal, dir);
 }
 
 //Cross product
