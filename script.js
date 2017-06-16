@@ -178,55 +178,32 @@ function rotateGroup(group, axis, angle) {
   arr = []
 }
 
-// function getAngleOnAxis(g, axis) {
-//   var res = 0;
-//   if(axis.x != 0) {
-//     return g.rotation._x;
-//   }
-//   else if(axis.y != 0) {
-//     return g.rotation._y
-//   }
-//   else if(axis.z != 0) {
-//     return g.rotation._z
-//   }
-// }
+
 
 function getGroup(normal, i) {
   var group = new THREE.Group();
   var axis = getAxis(normal);
 
-  switch(axis) {
-    case 'x':
-      for(var j = 0; j < rows; j++) {
-        for(var k = 0; k < rows; k++) {
-          var index = i * rows * rows + k + j * rows;
-          group.add(objects[index]);
-        }
-      }
-      break;
+  function getIndex(j, k) {
+    switch(axis) {
+      case 'x':
+            return (i * rows * rows + k + j * rows);
 
-    case 'y':
-      for(var j = 0; j < rows; j++) {
-        for(var k = 0; k < rows; k++) {
-          var index = rows * i + rows * rows * j + k;
-          group.add(objects[index]);
-        }
-      }
-      break; 
+      case 'y':
+            return (rows * i + rows * rows * j + k);
 
-    case 'z':
-        for(var j = 0; j < rows; j++) {
-          for(var k = 0; k < rows; k++) {
-            var index = i + rows * rows * k + j * rows;
-            group.add(objects[index]);
-          }
-        }
-      break;
-
-    default:
-
-      break;
+      case 'z':
+            return (i + rows * rows * k + j * rows);
+    }
   }
+
+  for(var j = 0; j < rows; j++) {
+    for(var k = 0; k < rows; k++) {
+      var index = getIndex(j, k);
+      group.add(objects[index]);
+    }
+  }
+
   scene.add(group);
   return group;
 }
