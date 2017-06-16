@@ -154,11 +154,6 @@ function onClick(event) {
   if(intersects) {
     controls.enabled = false;
     arr.push(intersects);
-    
-    console.log(intersects.face.normal);
-    console.log(intersects.object.position);
-    console.log('\n');
-   
    }
 }
 
@@ -173,9 +168,10 @@ function anim() {
 }
 
 function rotateGroup(group, axis, angle) {
-  // console.log("inside rotateGroup")
   // var normal = a[0].face.normal;
-
+  axis.x = Math.abs(axis.x);
+  axis.y = Math.abs(axis.y);
+  axis.z = Math.abs(axis.z);
   group.rotateOnAxis(axis, angle)
   // angle = getAngleOnAxis(group, normal);
   scene.add(group);
@@ -203,7 +199,7 @@ function getGroup(normal, i) {
     case 'x':
       for(var j = 0; j < rows; j++) {
         for(var k = 0; k < rows; k++) {
-          index = i * rows * rows + k + j * rows;
+          var index = i * rows * rows + k + j * rows;
           group.add(objects[index])
         }
       }
@@ -244,26 +240,42 @@ function getAxis(normal) {
 }
 
 
-function getMove(faceA, faceB) {
-  var res = 0;
-  var nA = faceA.normal;
-  var nB = faceB.normal;
-  if(nA == nB) {
-    var dir = {
-          x: (faceA.x - faceB.x) / step,
-          y: (faceA.y - faceB.y) / step,
-          z: (faceA.z - faceB.z) / step
+function makeMove(intersectA, intersectB) {
+  var normal;
+  var index;
+  var dir;
+  var nA = intersectA.face.normal;
+  var nB = intersectB.face.normal;
+  var posA = intersectA.object.position;
+  var posB = intersectB.object.position;
+  if( nA.x == nB.x &&
+      nA.y == nB.y &&
+      nA.z == nB.z    ) {
+    var face = {
+          x: (posA.x - posB.x) / step,
+          y: (posA.y - posB.y) / step,
+          z: (posA.z - posB.z) / step
         } 
-    res = dot(dir, nA);
+    normal = cross(face, nA);
   }
-  return res;
+  else {
+    normal = cross(nA, nB);
+  }
+  var i = getAxis(normal);
+  index = (posA[i] + step) / step ;
+  dir = normal.x + normal.y + normal.z;
+  console.log(dir)
+  console.log(normal)
+  var g = getGroup(normal, index);
+  rotateGroup(g, normal, dir * Math.PI / 10);
 }
 
 //Cross product
-function dot(u, v) {
+function cross(u, v) {
   return {
     x: (u.y*v.z - u.z*v.y),
     y: (u.z*v.x - u.x*v.z),
     z: (u.x*v.y - u.y*v.x) 
   }
 }
+
