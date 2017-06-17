@@ -210,7 +210,10 @@ function anim() {
    render();
 }
 
-function rotateGroup(group, axis, dir) {
+function rotateGroup(indices, axis, dir) {
+  var group = new THREE.Group();
+  indices.map(function(i) {group.add(objects[i])});
+  scene.add(group);
   var angle = getAngleOnAxis(group, axis);
   var limit = Math.PI / 2 + Math.abs(angle);
   var incr = dir * .04;
@@ -247,7 +250,8 @@ function getAngleOnAxis(g, axis) {
 }
 
 function getGroup(normal, i) {
-  var group = new THREE.Group();
+  //var group = new THREE.Group();
+  var indices = [];
   var axis = getAxis(normal);
 
   function getIndex(j, k) {
@@ -266,13 +270,13 @@ function getGroup(normal, i) {
   for(var j = 0; j < rows; j++) {
     for(var k = 0; k < rows; k++) {
       var index = getIndex(j, k);
-      console.log(index);
-      group.add(objects[index]);
+      indices.push(index);
+     // group.add(objects[index]);
     }
   }
 
-  scene.add(group);
-  return group;
+ // scene.add(group);
+  return indices;
 }
 
 
@@ -318,8 +322,8 @@ function makeMove(intersectA, intersectB) {
   var i = getAxis(normal);
   index = (posA[i] + step) / step ;
   dir = normal.x + normal.y + normal.z;
-  var g = getGroup(normal, index);
- // rotateGroup(g, normal, dir);
+  var indices = getGroup(normal, index);
+  rotateGroup(indices, normal, dir);
 }
 
 //Cross product
