@@ -211,14 +211,14 @@ function anim() {
 }
 
 function rotateGroup(group, axis, dir) {
-  var angle = 0;
+  var angle = getAngleOnAxis(group, axis);
+  var limit = Math.PI / 2 + Math.abs(angle);
   var incr = dir * .04;
   function animGroup() {
       angle += incr;
-      if(Math.abs(angle) < Math.PI / 2) {
+      if(Math.abs(angle) < limit) {
         group.rotateOnAxis(axis, incr);
         requestAnimationFrame(animGroup);
-        //scene.add(group);
       }
       else {
         var theta = getAngleOnAxis(group, axis);
@@ -229,7 +229,6 @@ function rotateGroup(group, axis, dir) {
   axis.x = Math.abs(axis.x);
   axis.y = Math.abs(axis.y);
   axis.z = Math.abs(axis.z);
-  scene.add(group);
   animGroup();
   arr = []
 }
@@ -260,18 +259,19 @@ function getGroup(normal, i) {
             return (rows * i + rows * rows * j + k);
 
       case 'z':
-            return (i + rows * rows * k + j * rows);
+            return (i + rows * rows * j + k * rows);
     }
   }
-
+  console.log(axis)
   for(var j = 0; j < rows; j++) {
     for(var k = 0; k < rows; k++) {
       var index = getIndex(j, k);
+      console.log(index);
       group.add(objects[index]);
     }
   }
 
- //scene.add(group);
+  scene.add(group);
   return group;
 }
 
@@ -318,10 +318,8 @@ function makeMove(intersectA, intersectB) {
   var i = getAxis(normal);
   index = (posA[i] + step) / step ;
   dir = normal.x + normal.y + normal.z;
-  console.log(dir)
-  console.log(normal)
   var g = getGroup(normal, index);
-  rotateGroup(g, normal, dir);
+ // rotateGroup(g, normal, dir);
 }
 
 //Cross product
@@ -333,3 +331,24 @@ function cross(u, v) {
   }
 }
 
+/* given a rotation axis and direction 
+ update cubes and objects arrays indices */ 
+function updateRefs(group, axis, dir) {
+
+}
+
+
+function rotateIndices(targetArr, dir) {
+  var res = [];
+  var i0 = (dir < 0) ? 0 : rows - 1;
+  var j0 = (dir < 0) ? rows - 1 : 0;
+  var di = (dir < 0) ?  1 : -1;
+  var dj = (dir < 0) ? -1 :  1;
+  for(var i = i0; !(i == rows || i == -1); i += di) {
+    for(var j = j0; !(j == rows || j == -1); j += dj) {
+      var index = i + (j * rows); 
+      res.push(targetArr[index])
+    }
+  }
+  return res;
+}
