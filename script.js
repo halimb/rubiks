@@ -19,6 +19,12 @@ var rotate = document.getElementById('rotate');
 //Block arrangement params
 var rows = 3; var dim = 4; var gap = 0;
 var step = dim + gap;
+
+// [0 .. rows * rows]
+var canon = Array(rows * rows)
+              .fill(0)
+              .map(function(el, i){return i});
+
 //Random arrangement params
 var n = 100; var maxDim = 4; var scope = 50;
 
@@ -64,6 +70,8 @@ function init() {
   controls.enableDamping = true;
   controls.dampingFactor = 0.1;
   controls.rotateSpeed = 0.15;
+  controls.maxPolarAngle = 3 * Math.PI / 2
+  controls.minPolarAngle = -Infinity
   
   axis = new THREE.AxisHelper(20);
   
@@ -81,16 +89,16 @@ function drawCubes(n, dim, gap) {
   var step = dim + gap;
   var length = n * step - gap;
   var offset = length / 2;
-  var op = 1;
+  var id = 0;
   indexOffset = scene.children.length;
   for(var i = 0; i < n; i++) {
     for(var j = 0; j < n; j++) {
       for(var k = 0; k < n; k++) {
         var mat = new THREE.MeshPhongMaterial({color: cubeColor,
                                                transparent: true,
-                                               vertexColors: THREE.FaceColors,
+                                               vertexColors: THREE.FaceColors
                                                //shininess: 70,
-                                               opacity: op});
+                                             });
         var geo = new THREE.BoxGeometry(dim, dim, dim);
         var edgesGeo = new THREE.EdgesGeometry(geo);
         var edge = new THREE.LineSegments(
@@ -117,6 +125,8 @@ function drawCubes(n, dim, gap) {
         var c = new THREE.Group();
         c.add(obj);
         c.add(edge);
+        c.name = id;
+        id++;
         cubes.push(obj);
         objects.push(c);
         scene.add(c);
@@ -125,38 +135,52 @@ function drawCubes(n, dim, gap) {
   }
 }
 
+function getObjects() {
+  var pos = {x:0, y:4, z:-4};
+  return scene.getObjectByProperty ( position, pos );
+}
+
 function getFaceColor(i) {
   switch(i) {
+    // 1
     case 0:
     case 1:
       return {r: 1,
-              g: 0,
+              g: .5,
               b: 0 };
+
+    // 2
     case 2:
     case 3:
-      return {r: 0,
-              g: 1,
+      return {r: 1,
+              g: 0,
               b: 0 };
+    
+    //3
     case 4:
     case 5:
       return {r: 0,
-              g: 0,
-              b: 1 };
-    case 6:
-    case 7:
-      return {r: 1,
               g: 1,
               b: 0 };
+    // 4
+    case 6:
+    case 7:
+      return {r: 0,
+              g: 0,
+              b: 1 };
+    // 5
     case 8:
     case 9:
       return {r: 1,
               g: 1,
-              b: 1 };
+              b: 0 };
+    
+    //6           
     case 10:
     case 11:
       return {r: 1,
-              g: .5,
-              b: 0 };
+              g: 1,
+              b: 1 };
   }
 }
 
@@ -211,22 +235,31 @@ function anim() {
 }
 
 function rotateGroup(indices, axis, dir) {
-  var group = new THREE.Group();
+  /*var group = new THREE.Group();
   indices.map(function(i) {group.add(objects[i])});
-  scene.add(group);
-  var angle = getAngleOnAxis(group, axis);
-  var limit = Math.PI / 2 + Math.abs(angle);
-  var incr = dir * .04;
+  scene.add(group);*/
+  var angle = getAngleOnAxis(objects[indices[0]], axis);
+  var limit = dir * Math.PI / 2 + angle;
+  var incr = dir * .1;
+  var count = 0;
   function animGroup() {
       angle += incr;
-      if(Math.abs(angle) < limit) {
-        group.rotateOnAxis(axis, incr);
+      count += incr;
+      if(Math.abs(count) < Math.PI/2) {
+        for(var i = 0; i < indices.length; i++) {
+          objects[indices[i]].setRotationFromAxisAngle ( axis, angle )//rotateOnAxis(axis, incr);
+        }
         requestAnimationFrame(animGroup);
       }
       else {
-        var theta = getAngleOnAxis(group, axis);
-        var delta = Math.PI/2 - Math.abs(theta);
-        group.rotateOnAxis(axis, dir * delta);
+        // var theta = getAngleOnAxis(group, axis);
+        // var delta = Math.PI/2 - Math.abs(theta);
+        for(var i = 0; i < indices.length; i++) {
+          objects[indices[i]].setRotationFromAxisAngle ( axis, limit )//rotateOnAxis(axis, incr);
+        }
+
+        //group.rotateOnAxis(axis, dir * delta);
+        updateRefs(indices, dir);
       }
     }
   axis.x = Math.abs(axis.x);
@@ -266,7 +299,6 @@ function getGroup(normal, i) {
             return (i + rows * rows * j + k * rows);
     }
   }
-  console.log(axis)
   for(var j = 0; j < rows; j++) {
     for(var k = 0; k < rows; k++) {
       var index = getIndex(j, k);
@@ -279,12 +311,6 @@ function getGroup(normal, i) {
   return indices;
 }
 
-
-
-function hideCube(n) {
-  var children = scene.children;
-  objects[n].visible = false;
-}
 
 function getAxis(normal) {
   var res = 0;
@@ -337,12 +363,22 @@ function cross(u, v) {
 
 /* given a rotation axis and direction 
  update cubes and objects arrays indices */ 
-function updateRefs(group, axis, dir) {
-
+function updateRefs(indices, dir) {
+  var rotated = rotateIndices(indices, dir);
+  for(var i = 0; i < indices.length; i++) {
+    objects = swap(objects, indices[i], indices[rotated[i]]);
+  }
 }
 
+function swap(arr, i, j) {
+  var res = arr;
+  var temp = res[i];
+  res[i] = res[j];
+  res[j] = temp;
+  return res;
+}
 
-function rotateIndices(targetArr, dir) {
+function rotateIndices(dir) {
   var res = [];
   var i0 = (dir < 0) ? 0 : rows - 1;
   var j0 = (dir < 0) ? rows - 1 : 0;
@@ -351,7 +387,7 @@ function rotateIndices(targetArr, dir) {
   for(var i = i0; !(i == rows || i == -1); i += di) {
     for(var j = j0; !(j == rows || j == -1); j += dj) {
       var index = i + (j * rows); 
-      res.push(targetArr[index])
+      res.push(canon[index])
     }
   }
   return res;
