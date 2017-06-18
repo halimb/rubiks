@@ -238,26 +238,30 @@ function rotateGroup(indices, axis, dir) {
   /*var group = new THREE.Group();
   indices.map(function(i) {group.add(objects[i])});
   scene.add(group);*/
+  var finalRot = Math.PI / 2;
+  var q = new THREE.Quaternion();
   var angle = getAngleOnAxis(objects[indices[0]], axis);
-  var limit = dir * Math.PI / 2 + angle;
+  var limit = dir * finalRot + angle;
   var incr = dir * .1;
   var count = 0;
   function animGroup() {
       angle += incr;
       count += incr;
-      if(Math.abs(count) < Math.PI/2) {
+      q.setFromAxisAngle(axis, incr);
+      if(Math.abs(count) < finalRot) {
         for(var i = 0; i < indices.length; i++) {
-          objects[indices[i]].setRotationFromAxisAngle ( axis, angle )//rotateOnAxis(axis, incr);
+          objects[indices[i]].quaternion.premultiply(q);//setRotationFromAxisAngle ( axis, angle )//rotateOnAxis(axis, incr);
         }
         requestAnimationFrame(animGroup);
       }
       else {
-        // var theta = getAngleOnAxis(group, axis);
-        // var delta = Math.PI/2 - Math.abs(theta);
+        console.log(objects[indices[0]].rotation);
+        var delta = dir * ( finalRot - Math.abs(count - incr)) ;
+        q.setFromAxisAngle(axis, delta);
         for(var i = 0; i < indices.length; i++) {
-          objects[indices[i]].setRotationFromAxisAngle ( axis, limit )//rotateOnAxis(axis, incr);
+          objects[indices[i]].quaternion.premultiply(q);//setRotationFromAxisAngle ( axis, limit )//rotateOnAxis(axis, incr);
         }
-
+        console.log(objects[indices[0]].rotation);
         //group.rotateOnAxis(axis, dir * delta);
         updateRefs(indices, dir);
       }
@@ -266,19 +270,23 @@ function rotateGroup(indices, axis, dir) {
   axis.y = Math.abs(axis.y);
   axis.z = Math.abs(axis.z);
   animGroup();
-  arr = []
+  //arr = []
 }
+
+
+
+
 
 function getAngleOnAxis(g, axis) {
   var res = 0;
   if(axis.x != 0) {
-    return g.rotation._x;
+    return g.rotation.x;
   }
   if(axis.y != 0) {
-    return g.rotation._y
+    return g.rotation.y;
   }
   if(axis.z != 0) {
-    return g.rotation._z
+    return g.rotation.z
   }
 }
 
