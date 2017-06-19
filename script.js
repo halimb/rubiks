@@ -1,4 +1,5 @@
 "use strict";
+var proto = [];
 var objects = [];
 var cubes = [];
 var edges = [];
@@ -62,7 +63,7 @@ function init() {
   renderer.setClearColor(clearColor, 1);
 
   //Camera
-  camera = new THREE.PerspectiveCamera(45, 1.0, 0.1, 10000);
+  camera = new THREE.PerspectiveCamera(45, 1.0, 0.5, 10000);
   camera.position.set(30, 30, 30);
   camera.updateProjectionMatrix();
 
@@ -70,8 +71,8 @@ function init() {
   controls = new THREE.OrbitControls(camera, renderer.domElement);
   controls.enabled = true;
   controls.enableDamping = true;
-  controls.dampingFactor = 0.1;
-  controls.rotateSpeed = 0.15;
+  controls.dampingFactor = 0.5;
+  controls.rotateSpeed = 0.55;
   controls.maxPolarAngle = 3 * Math.PI / 2
   controls.minPolarAngle = -Infinity
   
@@ -120,11 +121,25 @@ function drawCubes(n, dim, gap) {
         for(var p = 0; p < obj.geometry.faces.length; p++) {
           obj.geometry.faces[p].color = getFaceColor(p);
         }
-        
 
         edge.position.x = obj.position.x;
         edge.position.y = obj.position.y;
         edge.position.z = obj.position.z;
+
+        var protoMat = new THREE.MeshPhongMaterial({color: cubeColor,
+                                               transparent: true,
+                                               vertexColors: THREE.FaceColors,
+                                               opacity: 0
+                                               //shininess: 70,
+                                             });
+        var protoGeo = new THREE.BoxGeometry(dim , dim , dim );
+
+        // var pr = new THREE.Mesh(protoGeo, protoMat);
+        // pr.position.x = i * step - offset + (dim ) / 2;
+        // pr.position.y = j * step - offset + (dim ) / 2;
+        // pr.position.z = k * step - offset + (dim ) / 2;
+       // pr.visible = false;
+        // proto.push(pr);
         var c = new THREE.Group();
         c.add(obj);
         c.add(edge);
@@ -133,6 +148,7 @@ function drawCubes(n, dim, gap) {
         cubes.push(obj);
         objects.push(c);
         scene.add(c);
+        // scene.add(pr);
       }
     }
   }
@@ -150,9 +166,9 @@ function getFaceColor(i) {
     // 2
     case 2:
     case 3:
-      return {r: .17,
-              g: .17,
-              b: .17 };
+      return {r: .57,
+              g: .57,
+              b: .57 };
     
     //3
     case 4:
@@ -278,10 +294,9 @@ function anim() {
 
 function rotateGroup(indices, axis, dir) {
   var finalRot = Math.PI / 2;
-  var q = new THREE.Quaternion();
   var angle = getAngleOnAxis(objects[indices[0]], axis);
   var limit = dir * finalRot + angle;
-  var incr = dir * .1;
+  var incr = dir * .5;
   var count = 0;
   function animGroup() {
       angle += incr;
@@ -322,7 +337,6 @@ function getAngleOnAxis(g, axis) {
 }
 
 function getGroup(normal, i) {
-  //var group = new THREE.Group();
   var indices = [];
   var axis = getAxis(normal);
 
@@ -359,23 +373,58 @@ function getAxis(normal) {
   return res;
 }
 
+function roundTo(unit, value) {
+  return Math.round(value / unit) * unit;
+}
+
+function getPos(p) {
+  return {
+          x: roundTo(step, p.x),
+          y: roundTo(step, p.y),
+          z: roundTo(step, p.z)
+        }
+}
+
+function getDir(a, b) {
+  return {
+          x: (a.x - b.x) / step,
+          y: (a.y - b.y) / step,
+          z: (a.z - b.z) / step
+        }
+}
+
+function diff(x, y) {
+  return Math.abs(Math.abs(x) - Math.abs(y));
+}
+
+function getNormal(p) {
+  var innerRad = step + dim / 2;
+  var dx = diff(p.x, innerRad);
+  var dy = diff(p.y, innerRad);
+  var dz = diff(p.z, innerRad);
+  return {
+        x: (dx < .1) ? Math.sign(p.x) : 0,
+        y: (dy < .1) ? Math.sign(p.y) : 0,
+        z: (dz < .1) ? Math.sign(p.z) : 0
+       }
+}
 
 function makeMove(intersectA, intersectB) {
-  var normal;
-  var index;
   var dir;
-  var nA = intersectA.face.normal;
-  var nB = intersectB.face.normal;
-  var posA = intersectA.object.position;
-  var posB = intersectB.object.position;
+  var index;
+  var normal;
+  var a = intersectA.point;
+  var b = intersectB.point;
+  console.log(a);
+  console.log(b);
+  var nA = getNormal(a);
+  var nB = getNormal(b);
+  var posA = getPos(a);
+  var posB = getPos(b);
   if( nA.x == nB.x &&
       nA.y == nB.y &&
       nA.z == nB.z    ) {
-    var face = {
-          x: (posA.x - posB.x) / step,
-          y: (posA.y - posB.y) / step,
-          z: (posA.z - posB.z) / step
-        } 
+    var face = getDir(posA, posB);
     normal = cross(face, nA);
   }
   else {
@@ -385,6 +434,9 @@ function makeMove(intersectA, intersectB) {
   index = (posA[i] + step) / step ;
   dir = normal.x + normal.y + normal.z;
   var indices = getGroup(normal, index);
+  console.log(indices);
+  // console.log(normal);
+  // console.log(dir);
   rotateGroup(indices, normal, dir);
 }
 
