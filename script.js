@@ -294,7 +294,7 @@ function anim() {
 
 function rotateGroup(indices, axis, dir) {
   var finalRot = Math.PI / 2;
-  var angle = getAngleOnAxis(objects[indices[0]], axis);
+  var angle = 0//getAngleOnAxis(objects[indices[0]], axis);
   var limit = dir * finalRot + angle;
   var incr = dir * .5;
   var count = 0;
@@ -311,8 +311,10 @@ function rotateGroup(indices, axis, dir) {
       else {
         var delta = dir * ( finalRot - Math.abs(count - incr)) ;
         for(var i = 0; i < indices.length; i++) {
-          var o  = objects[indices[i]];
-          o.rotateOnAxis(axis, delta);
+          var o  = cubes[indices[i]];
+          var ob = objects[indices[i]];
+          ob.rotateOnAxis(axis, -limit + delta);
+          o.rotateOnAxis(axis, limit);
         }
       }
     }
@@ -403,9 +405,9 @@ function getNormal(p) {
   var dy = diff(p.y, innerRad);
   var dz = diff(p.z, innerRad);
   return {
-        x: (dx < .1) ? Math.sign(p.x) : 0,
-        y: (dy < .1) ? Math.sign(p.y) : 0,
-        z: (dz < .1) ? Math.sign(p.z) : 0
+          x: (dx < .1) ? Math.sign(p.x) : 0,
+          y: (dy < .1) ? Math.sign(p.y) : 0,
+          z: (dz < .1) ? Math.sign(p.z) : 0
        }
 }
 
