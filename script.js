@@ -28,6 +28,8 @@ var canon = Array(rows * rows)
 //Random arrangement params
 var n = 100; var maxDim = 4; var scope = 50;
 
+//
+
 init();
 anim();
 
@@ -108,6 +110,7 @@ function drawCubes(n, dim, gap) {
                                       transparent: true,
                                       linewidth: 3})
                                          );
+
         var obj = new THREE.Mesh(geo, mat);
         obj.position.x = i * step - offset + dim / 2;
         obj.position.y = j * step - offset + dim / 2;
@@ -118,7 +121,7 @@ function drawCubes(n, dim, gap) {
           obj.geometry.faces[p].color = getFaceColor(p);
         }
         
-        
+
         edge.position.x = obj.position.x;
         edge.position.y = obj.position.y;
         edge.position.z = obj.position.z;
@@ -135,45 +138,40 @@ function drawCubes(n, dim, gap) {
   }
 }
 
-function getObjects() {
-  var pos = {x:0, y:4, z:-4};
-  return scene.getObjectByProperty ( position, pos );
-}
-
 function getFaceColor(i) {
   switch(i) {
     // 1
     case 0:
     case 1:
-      return {r: 1,
-              g: .5,
+      return {r: 0,
+              g: 0,
               b: 0 };
 
     // 2
     case 2:
     case 3:
-      return {r: 1,
-              g: 0,
-              b: 0 };
+      return {r: .17,
+              g: .17,
+              b: .17 };
     
     //3
     case 4:
     case 5:
-      return {r: 0,
-              g: 1,
-              b: 0 };
+      return {r: .35,
+              g: .35,
+              b: .35 };
     // 4
     case 6:
     case 7:
-      return {r: 0,
-              g: 0,
-              b: 1 };
+      return {r: .55,
+              g: .55,
+              b: .55 };
     // 5
     case 8:
     case 9:
-      return {r: 1,
-              g: 1,
-              b: 0 };
+      return {r: .75,
+              g: .75,
+              b: .75 };
     
     //6           
     case 10:
@@ -183,6 +181,50 @@ function getFaceColor(i) {
               b: 1 };
   }
 }
+
+// function getFaceColor(i) {
+//   switch(i) {
+//     // 1
+//     case 0:
+//     case 1:
+//       return {r: 1,
+//               g: .5,
+//               b: 0 };
+
+//     // 2
+//     case 2:
+//     case 3:
+//       return {r: 1,
+//               g: 0,
+//               b: 0 };
+    
+//     //3
+//     case 4:
+//     case 5:
+//       return {r: 0,
+//               g: 1,
+//               b: 0 };
+//     // 4
+//     case 6:
+//     case 7:
+//       return {r: 0,
+//               g: 0,
+//               b: 1 };
+//     // 5
+//     case 8:
+//     case 9:
+//       return {r: 1,
+//               g: 1,
+//               b: 0 };
+    
+//     //6           
+//     case 10:
+//     case 11:
+//       return {r: 1,
+//               g: 1,
+//               b: 1 };
+//   }
+// }
 
 
 function getIntersects(event) {
@@ -235,9 +277,6 @@ function anim() {
 }
 
 function rotateGroup(indices, axis, dir) {
-  /*var group = new THREE.Group();
-  indices.map(function(i) {group.add(objects[i])});
-  scene.add(group);*/
   var finalRot = Math.PI / 2;
   var q = new THREE.Quaternion();
   var angle = getAngleOnAxis(objects[indices[0]], axis);
@@ -247,35 +286,27 @@ function rotateGroup(indices, axis, dir) {
   function animGroup() {
       angle += incr;
       count += incr;
-      q.setFromAxisAngle(axis, incr);
       if(Math.abs(count) < finalRot) {
         for(var i = 0; i < indices.length; i++) {
-          objects[indices[i]].quaternion.premultiply(q);//setRotationFromAxisAngle ( axis, angle )//rotateOnAxis(axis, incr);
+          var o = objects[indices[i]];
+          o.rotateOnAxis(axis, incr);
         }
         requestAnimationFrame(animGroup);
       }
       else {
-        console.log(objects[indices[0]].rotation);
         var delta = dir * ( finalRot - Math.abs(count - incr)) ;
-        q.setFromAxisAngle(axis, delta);
         for(var i = 0; i < indices.length; i++) {
-          objects[indices[i]].quaternion.premultiply(q);//setRotationFromAxisAngle ( axis, limit )//rotateOnAxis(axis, incr);
+          var o  = objects[indices[i]];
+          o.rotateOnAxis(axis, delta);
         }
-        console.log(objects[indices[0]].rotation);
-        //group.rotateOnAxis(axis, dir * delta);
-        updateRefs(indices, dir);
       }
     }
   axis.x = Math.abs(axis.x);
   axis.y = Math.abs(axis.y);
   axis.z = Math.abs(axis.z);
   animGroup();
-  //arr = []
+  arr = [];
 }
-
-
-
-
 
 function getAngleOnAxis(g, axis) {
   var res = 0;
@@ -311,11 +342,8 @@ function getGroup(normal, i) {
     for(var k = 0; k < rows; k++) {
       var index = getIndex(j, k);
       indices.push(index);
-     // group.add(objects[index]);
     }
   }
-
- // scene.add(group);
   return indices;
 }
 
@@ -369,34 +397,34 @@ function cross(u, v) {
   }
 }
 
-/* given a rotation axis and direction 
- update cubes and objects arrays indices */ 
-function updateRefs(indices, dir) {
-  var rotated = rotateIndices(indices, dir);
-  for(var i = 0; i < indices.length; i++) {
-    objects = swap(objects, indices[i], indices[rotated[i]]);
-  }
-}
+// /* given a rotation axis and direction 
+//  update cubes and objects arrays indices */ 
+// function updateRefs(indices, dir) {
+//   var rotated = rotateIndices(indices, dir);
+//   for(var i = 0; i < indices.length; i++) {
+//     objects = swap(objects, indices[i], indices[rotated[i]]);
+//   }
+// }
 
-function swap(arr, i, j) {
-  var res = arr;
-  var temp = res[i];
-  res[i] = res[j];
-  res[j] = temp;
-  return res;
-}
+// function swap(arr, i, j) {
+//   var res = arr;
+//   var temp = res[i];
+//   res[i] = res[j];
+//   res[j] = temp;
+//   return res;
+// }
 
-function rotateIndices(dir) {
-  var res = [];
-  var i0 = (dir < 0) ? 0 : rows - 1;
-  var j0 = (dir < 0) ? rows - 1 : 0;
-  var di = (dir < 0) ?  1 : -1;
-  var dj = (dir < 0) ? -1 :  1;
-  for(var i = i0; !(i == rows || i == -1); i += di) {
-    for(var j = j0; !(j == rows || j == -1); j += dj) {
-      var index = i + (j * rows); 
-      res.push(canon[index])
-    }
-  }
-  return res;
-}
+// function rotateIndices(dir) {
+//   var res = [];
+//   var i0 = (dir < 0) ? 0 : rows - 1;
+//   var j0 = (dir < 0) ? rows - 1 : 0;
+//   var di = (dir < 0) ?  1 : -1;
+//   var dj = (dir < 0) ? -1 :  1;
+//   for(var i = i0; !(i == rows || i == -1); i += di) {
+//     for(var j = j0; !(j == rows || j == -1); j += dj) {
+//       var index = i + (j * rows); 
+//       res.push(canon[index])
+//     }
+//   }
+//   return res;
+// }
