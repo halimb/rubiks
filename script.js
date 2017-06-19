@@ -18,7 +18,7 @@ var resetBtn = document.getElementById("reset");
 var rotate = document.getElementById('rotate');
 
 //Block arrangement params
-var rows = 3; var dim = 4; var gap = 0;
+var rows = 3; var dim = 4; var gap = 2;
 var step = dim + gap;
 
 // [0 .. rows * rows]
@@ -154,84 +154,40 @@ function drawCubes(n, dim, gap) {
   }
 }
 
-function getFaceColor(i) {
-  switch(i) {
-    // 1
-    case 0:
-    case 1:
-      return {r: 0,
-              g: 0,
-              b: 0 };
-
-    // 2
-    case 2:
-    case 3:
-      return {r: .57,
-              g: .57,
-              b: .57 };
-    
-    //3
-    case 4:
-    case 5:
-      return {r: .35,
-              g: .35,
-              b: .35 };
-    // 4
-    case 6:
-    case 7:
-      return {r: .55,
-              g: .55,
-              b: .55 };
-    // 5
-    case 8:
-    case 9:
-      return {r: .75,
-              g: .75,
-              b: .75 };
-    
-    //6           
-    case 10:
-    case 11:
-      return {r: 1,
-              g: 1,
-              b: 1 };
-  }
-}
-
 // function getFaceColor(i) {
 //   switch(i) {
 //     // 1
 //     case 0:
 //     case 1:
-//       return {r: 1,
-//               g: .5,
+//       return {r: 0,
+//               g: 0,
 //               b: 0 };
 
 //     // 2
 //     case 2:
 //     case 3:
-//       return {r: 1,
-//               g: 0,
-//               b: 0 };
+//       return {r: .57,
+//               g: .57,
+//               b: .57 };
     
 //     //3
 //     case 4:
 //     case 5:
-//       return {r: 0,
-//               g: 1,
-//               b: 0 };
+//       return {r: .35,
+//               g: .35,
+//               b: .35 };
 //     // 4
 //     case 6:
 //     case 7:
-//       return {r: 0,
-//               g: 0,
-//               b: 1 };
+//       return {r: .55,
+//               g: .55,
+//               b: .55 };
 //     // 5
 //     case 8:
 //     case 9:
-//       return {r: 1,
-//               g: 1,
-//               b: 0 };
+//       return {r: .75,
+//               g: .75,
+//               b: .75 };
     
 //     //6           
 //     case 10:
@@ -241,6 +197,50 @@ function getFaceColor(i) {
 //               b: 1 };
 //   }
 // }
+
+function getFaceColor(i) {
+  switch(i) {
+    // 1
+    case 0:
+    case 1:
+      return {r: 1,
+              g: .5,
+              b: 0 };
+
+    // 2
+    case 2:
+    case 3:
+      return {r: 1,
+              g: 0,
+              b: 0 };
+    
+    //3
+    case 4:
+    case 5:
+      return {r: 0,
+              g: 1,
+              b: 0 };
+    // 4
+    case 6:
+    case 7:
+      return {r: 0,
+              g: 0,
+              b: 1 };
+    // 5
+    case 8:
+    case 9:
+      return {r: 1,
+              g: 1,
+              b: 0 };
+    
+    //6           
+    case 10:
+    case 11:
+      return {r: 1,
+              g: 1,
+              b: 1 };
+  }
+}
 
 
 function getIntersects(event) {
