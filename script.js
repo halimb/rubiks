@@ -527,3 +527,22 @@ function rotateIndices(base, dir) {
   }
   return res;
 }
+
+function getCubeByPos(pos) {
+  for(var i = 0; i < objects.length; i++) {
+    var cubePos = objects[i].children[0].position
+    if( isSame(cubePos, pos) ) {
+      return objects[i];
+    }
+  }
+  console.error("no cube was found on position: ");
+  console.error(pos);
+}
+
+function isSame(a, b) {
+  return (
+      (a.x == b.x) &&
+      (a.y == b.y) &&
+      (a.z == b.z)
+    )
+}
