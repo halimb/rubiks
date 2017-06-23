@@ -64,7 +64,7 @@ function init() {
 
   //Camera
   camera = new THREE.PerspectiveCamera(45, 1.0, 0.5, 10000);
-  camera.position.set(30, 30, 30);
+  camera.position.set(60, 60, 60);
   camera.updateProjectionMatrix();
 
   //setting the orbit controls
@@ -138,7 +138,7 @@ function drawCubes(n, dim, gap) {
         // pr.position.x = i * step - offset + (dim ) / 2;
         // pr.position.y = j * step - offset + (dim ) / 2;
         // pr.position.z = k * step - offset + (dim ) / 2;
-       // pr.visible = false;
+        // pr.visible = false;
         // proto.push(pr);
         var c = new THREE.Group();
         c.add(obj);
@@ -154,84 +154,40 @@ function drawCubes(n, dim, gap) {
   }
 }
 
-// function getFaceColor(i) {
-//   switch(i) {
-//     // 1
-//     case 0:
-//     case 1:
-//       return {r: 0,
-//               g: 0,
-//               b: 0 };
-
-//     // 2
-//     case 2:
-//     case 3:
-//       return {r: .57,
-//               g: .57,
-//               b: .57 };
-    
-//     //3
-//     case 4:
-//     case 5:
-//       return {r: .35,
-//               g: .35,
-//               b: .35 };
-//     // 4
-//     case 6:
-//     case 7:
-//       return {r: .55,
-//               g: .55,
-//               b: .55 };
-//     // 5
-//     case 8:
-//     case 9:
-//       return {r: .75,
-//               g: .75,
-//               b: .75 };
-    
-//     //6           
-//     case 10:
-//     case 11:
-//       return {r: 1,
-//               g: 1,
-//               b: 1 };
-//   }
-// }
-
 function getFaceColor(i) {
   switch(i) {
     // 1
     case 0:
     case 1:
-      return {r: 1,
-              g: .5,
+      return {r: 0,
+              g: 0,
               b: 0 };
 
     // 2
     case 2:
     case 3:
-      return {r: 1,
-              g: 0,
-              b: 0 };
+      return {r: .57,
+              g: .57,
+              b: .57 };
     
     //3
     case 4:
     case 5:
-      return {r: 0,
-              g: 1,
-              b: 0 };
+      return {r: .35,
+              g: .35,
+              b: .35 };
     // 4
     case 6:
     case 7:
-      return {r: 0,
-              g: 0,
-              b: 1 };
+      return {r: .55,
+              g: .55,
+              b: .55 };
     // 5
     case 8:
     case 9:
-      return {r: 1,
-              g: 1,
-              b: 0 };
+      return {r: .75,
+              g: .75,
+              b: .75 };
     
     //6           
     case 10:
@@ -241,6 +197,50 @@ function getFaceColor(i) {
               b: 1 };
   }
 }
+
+// function getFaceColor(i) {
+//   switch(i) {
+//     // 1
+//     case 0:
+//     case 1:
+//       return {r: 1,
+//               g: .5,
+//               b: 0 };
+
+//     // 2
+//     case 2:
+//     case 3:
+//       return {r: 1,
+//               g: 0,
+//               b: 0 };
+    
+//     //3
+//     case 4:
+//     case 5:
+//       return {r: 0,
+//               g: 1,
+//               b: 0 };
+//     // 4
+//     case 6:
+//     case 7:
+//       return {r: 0,
+//               g: 0,
+//               b: 1 };
+//     // 5
+//     case 8:
+//     case 9:
+//       return {r: 1,
+//               g: 1,
+//               b: 0 };
+    
+//     //6           
+//     case 10:
+//     case 11:
+//       return {r: 1,
+//               g: 1,
+//               b: 1 };
+//   }
+// }
 
 
 function getIntersects(event) {
@@ -292,9 +292,17 @@ function anim() {
    render();
 }
 
+
+
 function rotateGroup(indices, axis, dir) {
+
+  printCube();
+
+  var before = [];
+  var after = [];
+
   var finalRot = Math.PI / 2;
-  var angle = 0//getAngleOnAxis(objects[indices[0]], axis);
+  var angle = getAngleOnAxis(objects[indices[0]], axis);
   var limit = dir * finalRot + angle;
   var incr = dir * .5;
   var count = 0;
@@ -304,7 +312,8 @@ function rotateGroup(indices, axis, dir) {
       if(Math.abs(count) < finalRot) {
         for(var i = 0; i < indices.length; i++) {
           var o = objects[indices[i]];
-          o.rotateOnAxis(axis, incr);
+          o.rotation[getAxis(axis)] += incr
+          //o.rotateOnAxis(axis, incr);
         }
         requestAnimationFrame(animGroup);
       }
@@ -313,16 +322,62 @@ function rotateGroup(indices, axis, dir) {
         for(var i = 0; i < indices.length; i++) {
           var o  = cubes[indices[i]];
           var ob = objects[indices[i]];
-          ob.rotateOnAxis(axis, -limit + delta);
-          o.rotateOnAxis(axis, limit);
+          before.push(ob);
+          ob.rotation[getAxis(axis)] += delta;
+          //ob.rotateOnAxis(axis, delta);
         }
-      }
     }
+  }
   axis.x = Math.abs(axis.x);
   axis.y = Math.abs(axis.y);
   axis.z = Math.abs(axis.z);
   animGroup();
+
+  function updateCube() {    
+    var rotated = rotateIndices(indices, -dir);
+    var clone = objects.slice();
+    console.log('\n\n')
+    printFace(before, "before");
+    for(var i = 0; i < indices.length; i++) {
+      var newObj = clone[ rotated[i] ];
+      after.push(newObj);   
+      objects[indices[i]] = newObj;
+    }
+    printFace(after, "after");
+    console.log('\n\n')
+    printCube();
+  }
+
+  window.setTimeout(updateCube, 1000);
   arr = [];
+}
+
+function printFace(arr, msg) {
+  if(msg) console.log(msg);
+  for(var i = 0; i < 3; i++) {
+      console.log(arr[i + i * 2].name + ", " + arr[i + 1 + i * 2].name + ", " + arr[i + 2 + i * 2].name);
+  }
+}
+
+function printCube() {
+  console.log("< CUBE >")
+  for(var j = 0; j < 3; j++) {
+    var face = objects.slice(j*9, (j + 1) * 9);
+    printFace(face, j);
+  }
+  console.log("< CUBE />")
+}
+
+function getAxis(axis) {
+  if(axis.x) {
+    return 'x';
+  }
+  else if(axis.y) {
+    return 'y';
+  }
+  else {
+    return 'z';
+  }
 }
 
 function getAngleOnAxis(g, axis) {
@@ -338,6 +393,7 @@ function getAngleOnAxis(g, axis) {
   }
 }
 
+// FIX THIS
 function getGroup(normal, i) {
   var indices = [];
   var axis = getAxis(normal);
@@ -354,12 +410,20 @@ function getGroup(normal, i) {
             return (i + rows * rows * j + k * rows);
     }
   }
+
   for(var j = 0; j < rows; j++) {
     for(var k = 0; k < rows; k++) {
       var index = getIndex(j, k);
-      indices.push(index);
+      indices.push(objects[index].name);
     }
   }
+
+  // for(var j = 0; j < rows; j++) {
+  //   for(var k = 0; k < rows; k++) {
+  //     var index = getIndex(j, k);
+  //     indices.push(objects[index].name);
+  //   }
+  // }
   return indices;
 }
 
@@ -417,8 +481,6 @@ function makeMove(intersectA, intersectB) {
   var normal;
   var a = intersectA.point;
   var b = intersectB.point;
-  console.log(a);
-  console.log(b);
   var nA = getNormal(a);
   var nB = getNormal(b);
   var posA = getPos(a);
@@ -436,7 +498,6 @@ function makeMove(intersectA, intersectB) {
   index = (posA[i] + step) / step ;
   dir = normal.x + normal.y + normal.z;
   var indices = getGroup(normal, index);
-  console.log(indices);
   // console.log(normal);
   // console.log(dir);
   rotateGroup(indices, normal, dir);
@@ -451,34 +512,18 @@ function cross(u, v) {
   }
 }
 
-// /* given a rotation axis and direction 
-//  update cubes and objects arrays indices */ 
-// function updateRefs(indices, dir) {
-//   var rotated = rotateIndices(indices, dir);
-//   for(var i = 0; i < indices.length; i++) {
-//     objects = swap(objects, indices[i], indices[rotated[i]]);
-//   }
-// }
 
-// function swap(arr, i, j) {
-//   var res = arr;
-//   var temp = res[i];
-//   res[i] = res[j];
-//   res[j] = temp;
-//   return res;
-// }
-
-// function rotateIndices(dir) {
-//   var res = [];
-//   var i0 = (dir < 0) ? 0 : rows - 1;
-//   var j0 = (dir < 0) ? rows - 1 : 0;
-//   var di = (dir < 0) ?  1 : -1;
-//   var dj = (dir < 0) ? -1 :  1;
-//   for(var i = i0; !(i == rows || i == -1); i += di) {
-//     for(var j = j0; !(j == rows || j == -1); j += dj) {
-//       var index = i + (j * rows); 
-//       res.push(canon[index])
-//     }
-//   }
-//   return res;
-// }
+function rotateIndices(base, dir) {
+  var res = [];
+  var i0 = (dir < 0) ? 0 : rows - 1;
+  var j0 = (dir < 0) ? rows - 1 : 0;
+  var di = (dir < 0) ?  1 : -1;
+  var dj = (dir < 0) ? -1 :  1;
+  for(var i = i0; !(i == rows || i == -1); i += di) {
+    for(var j = j0; !(j == rows || j == -1); j += dj) {
+      var index = i + (j * rows); 
+      res.push(base[index])
+    }
+  }
+  return res;
+}
