@@ -1,5 +1,5 @@
 "use strict";
-var proto = [];
+var positions = [];
 var objects = [];
 var cubes = [];
 var edges = [];
@@ -97,6 +97,12 @@ function drawCubes(n, dim, gap) {
   for(var i = 0; i < n; i++) {
     for(var j = 0; j < n; j++) {
       for(var k = 0; k < n; k++) {
+        var pos = {};
+        pos.x = i * step - offset + dim / 2;
+        pos.y = j * step - offset + dim / 2;
+        pos.z = k * step - offset + dim / 2;
+        positions.push(pos);
+
         var mat = new THREE.MeshPhongMaterial({color: cubeColor,
                                                transparent: true,
                                                vertexColors: THREE.FaceColors
@@ -111,35 +117,19 @@ function drawCubes(n, dim, gap) {
                                       transparent: true,
                                       linewidth: 3})
                                          );
-
+        edge.position.x = pos.x;
+        edge.position.y = pos.y;
+        edge.position.z = pos.z;
+      
         var obj = new THREE.Mesh(geo, mat);
-        obj.position.x = i * step - offset + dim / 2;
-        obj.position.y = j * step - offset + dim / 2;
-        obj.position.z = k * step - offset + dim / 2;
-
-        myc = obj;
         for(var p = 0; p < obj.geometry.faces.length; p++) {
           obj.geometry.faces[p].color = getFaceColor(p);
         }
 
-        edge.position.x = obj.position.x;
-        edge.position.y = obj.position.y;
-        edge.position.z = obj.position.z;
+        obj.position.x = pos.x;
+        obj.position.y = pos.y;
+        obj.position.z = pos.z;
 
-        var protoMat = new THREE.MeshPhongMaterial({color: cubeColor,
-                                               transparent: true,
-                                               vertexColors: THREE.FaceColors,
-                                               opacity: 0
-                                               //shininess: 70,
-                                             });
-        var protoGeo = new THREE.BoxGeometry(dim , dim , dim );
-
-        // var pr = new THREE.Mesh(protoGeo, protoMat);
-        // pr.position.x = i * step - offset + (dim ) / 2;
-        // pr.position.y = j * step - offset + (dim ) / 2;
-        // pr.position.z = k * step - offset + (dim ) / 2;
-        // pr.visible = false;
-        // proto.push(pr);
         var c = new THREE.Group();
         c.add(obj);
         c.add(edge);
@@ -294,7 +284,7 @@ function anim() {
 
 
 
-function rotateGroup(indices, axis, dir) {
+function rotateGroup(grPositions, axis, dir) {
 
   printCube();
 
@@ -302,28 +292,34 @@ function rotateGroup(indices, axis, dir) {
   var after = [];
 
   var finalRot = Math.PI / 2;
-  var angle = getAngleOnAxis(objects[indices[0]], axis);
-  var limit = dir * finalRot + angle;
+  //var angle = getAngleOnAxis(/*objects[indices[0]]*/, axis);
+  var limit = dir * finalRot// + angle;
   var incr = dir * .5;
   var count = 0;
   function animGroup() {
       angle += incr;
       count += incr;
       if(Math.abs(count) < finalRot) {
-        for(var i = 0; i < indices.length; i++) {
-          var o = objects[indices[i]];
+        for(var i = 0; i < grPositions.length; i++) {
+          var pos = grPositions[i];
+          var o = getCubeByPos(pos).children[0];//objects[indices[i]];
+          // o.matrixWorldNeedsUpdate = true;
           o.rotation[getAxis(axis)] += incr
+          // o.matrixWorldNeedsUpdate = true;
           //o.rotateOnAxis(axis, incr);
         }
         requestAnimationFrame(animGroup);
       }
       else {
         var delta = dir * ( finalRot - Math.abs(count - incr)) ;
-        for(var i = 0; i < indices.length; i++) {
-          var o  = cubes[indices[i]];
-          var ob = objects[indices[i]];
+        for(var i = 0; i < grPositions.length; i++) {
+          var pos = grPositions[i];
+          var ob = getCubeByPos(pos).children[0]
+          // ob.matrixWorldNeedsUpdate = true;
+         // var ob = objects[indices[i]];
           before.push(ob);
           ob.rotation[getAxis(axis)] += delta;
+          // ob.matrixWorldNeedsUpdate = true;
           //ob.rotateOnAxis(axis, delta);
         }
     }
@@ -333,22 +329,22 @@ function rotateGroup(indices, axis, dir) {
   axis.z = Math.abs(axis.z);
   animGroup();
 
-  function updateCube() {    
-    var rotated = rotateIndices(indices, -dir);
-    var clone = objects.slice();
-    console.log('\n\n')
-    printFace(before, "before");
-    for(var i = 0; i < indices.length; i++) {
-      var newObj = clone[ rotated[i] ];
-      after.push(newObj);   
-      objects[indices[i]] = newObj;
-    }
-    printFace(after, "after");
-    console.log('\n\n')
-    printCube();
-  }
+  // function updateCube() {    
+  //   var rotated = rotateIndices(indices, -dir);
+  //   var clone = objects.slice();
+  //   console.log('\n\n')
+  //   printFace(before, "before");
+  //   for(var i = 0; i < indices.length; i++) {
+  //     var newObj = clone[ rotated[i] ];
+  //     after.push(newObj);   
+  //     objects[indices[i]] = newObj;
+  //   }
+  //   printFace(after, "after");
+  //   console.log('\n\n')
+  //   printCube();
+  // }
 
-  window.setTimeout(updateCube, 1000);
+  // window.setTimeout(updateCube, 1000);
   arr = [];
 }
 
@@ -414,7 +410,7 @@ function getGroup(normal, i) {
   for(var j = 0; j < rows; j++) {
     for(var k = 0; k < rows; k++) {
       var index = getIndex(j, k);
-      indices.push(objects[index].name);
+      indices.push(positions[index]);
     }
   }
 
@@ -424,6 +420,7 @@ function getGroup(normal, i) {
   //     indices.push(objects[index].name);
   //   }
   // }
+  console.log(indices);
   return indices;
 }
 
@@ -496,11 +493,9 @@ function makeMove(intersectA, intersectB) {
   }
   var i = getAxis(normal);
   index = (posA[i] + step) / step ;
+  var grPositions = getGroup(normal, index);
   dir = normal.x + normal.y + normal.z;
-  var indices = getGroup(normal, index);
-  // console.log(normal);
-  // console.log(dir);
-  rotateGroup(indices, normal, dir);
+  rotateGroup(grPositions, normal, dir);
 }
 
 //Cross product
@@ -545,4 +540,28 @@ function isSame(a, b) {
       (a.y == b.y) &&
       (a.z == b.z)
     )
+}
+
+function getFace(intersectA, intersectB) {
+  var dir;
+  var index;
+  var normal;
+  var a = intersectA.point;
+  var b = intersectB.point;
+  var nA = getNormal(a);
+  var nB = getNormal(b);
+  var posA = getPos(a);
+  var posB = getPos(b);
+  if( nA.x == nB.x &&
+      nA.y == nB.y &&
+      nA.z == nB.z    ) {
+    var face = getDir(posA, posB);
+    normal = cross(face, nA);
+  }
+  else {
+    normal = cross(nA, nB);
+  }
+  var i = getAxis(normal);
+  index = (posA[i] + step) / step ;
+  return getGroup(normal, index)
 }
