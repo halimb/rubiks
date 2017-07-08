@@ -105,6 +105,7 @@ function drawCubes(n, dim, gap) {
 
         var mat = new THREE.MeshPhongMaterial({color: cubeColor,
                                                transparent: true,
+                                               side: THREE.DoubleSide,
                                                vertexColors: THREE.FaceColors
                                                //shininess: 70,
                                              });
@@ -133,7 +134,9 @@ function drawCubes(n, dim, gap) {
         var c = new THREE.Group();
         c.add(obj);
         c.add(edge);
-        c.name = id;
+        edge.name = id;
+        obj.name = id;
+        c.name = "gr" + id;
         id++;
         cubes.push(obj);
         objects.push(c);
@@ -284,25 +287,23 @@ function anim() {
 
 
 
-function rotateGroup(grPositions, axis, dir) {
+function rotateGroup(group, axis, dir) {
 
   printCube();
 
   var before = [];
   var after = [];
-
   var finalRot = Math.PI / 2;
   //var angle = getAngleOnAxis(/*objects[indices[0]]*/, axis);
   var limit = dir * finalRot// + angle;
-  var incr = dir * .5;
+  var incr = dir * .05;
   var count = 0;
   function animGroup() {
       angle += incr;
       count += incr;
       if(Math.abs(count) < finalRot) {
-        for(var i = 0; i < grPositions.length; i++) {
-          var pos = grPositions[i];
-          var o = getCubeByPos(pos).children[0];//objects[indices[i]];
+        for(var i = 0; i < group.length; i++) {
+          var o = group[i];
           // o.matrixWorldNeedsUpdate = true;
           o.rotation[getAxis(axis)] += incr
           // o.matrixWorldNeedsUpdate = true;
@@ -312,9 +313,8 @@ function rotateGroup(grPositions, axis, dir) {
       }
       else {
         var delta = dir * ( finalRot - Math.abs(count - incr)) ;
-        for(var i = 0; i < grPositions.length; i++) {
-          var pos = grPositions[i];
-          var ob = getCubeByPos(pos).children[0]
+        for(var i = 0; i < group.length; i++) {
+          var ob = group[i];
           // ob.matrixWorldNeedsUpdate = true;
          // var ob = objects[indices[i]];
           before.push(ob);
@@ -391,7 +391,7 @@ function getAngleOnAxis(g, axis) {
 
 // FIX THIS
 function getGroup(normal, i) {
-  var indices = [];
+  var group = [];
   var axis = getAxis(normal);
 
   function getIndex(j, k) {
@@ -410,18 +410,13 @@ function getGroup(normal, i) {
   for(var j = 0; j < rows; j++) {
     for(var k = 0; k < rows; k++) {
       var index = getIndex(j, k);
-      indices.push(positions[index]);
+      var pos = positions[index];
+      var o = getCubeByPos(pos);
+      group.push(o);
     }
   }
 
-  // for(var j = 0; j < rows; j++) {
-  //   for(var k = 0; k < rows; k++) {
-  //     var index = getIndex(j, k);
-  //     indices.push(objects[index].name);
-  //   }
-  // }
-  console.log(indices);
-  return indices;
+  return group;
 }
 
 
@@ -493,9 +488,9 @@ function makeMove(intersectA, intersectB) {
   }
   var i = getAxis(normal);
   index = (posA[i] + step) / step ;
-  var grPositions = getGroup(normal, index);
+  var gr = getGroup(normal, index);
   dir = normal.x + normal.y + normal.z;
-  rotateGroup(grPositions, normal, dir);
+  rotateGroup(gr, normal, dir);
 }
 
 //Cross product
@@ -524,22 +519,15 @@ function rotateIndices(base, dir) {
 }
 
 function getCubeByPos(pos) {
-  for(var i = 0; i < objects.length; i++) {
-    var cubePos = objects[i].children[0].position
-    if( isSame(cubePos, pos) ) {
-      return objects[i];
-    }
-  }
-  console.error("no cube was found on position: ");
-  console.error(pos);
-}
-
-function isSame(a, b) {
-  return (
-      (a.x == b.x) &&
-      (a.y == b.y) &&
-      (a.z == b.z)
-    )
+  var origin = new THREE.Vector3(pos.x, pos.y, pos.z);
+  var ray = new THREE.Raycaster( origin );
+  ray.direction = new THREE.Vector3(1,0,0);
+  ray.far = ( dim + gap ) / 2;
+  var intersects = ray.intersectObjects(objects, true);
+  /* the cube id precedes the id of the group 
+    containing both the cube and its frame  */
+  var name = intersects[0].object.name;
+  return scene.getObjectByName("gr" + name);
 }
 
 function getFace(intersectA, intersectB) {
