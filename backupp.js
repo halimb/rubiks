@@ -24,7 +24,6 @@ var step = dim + gap;
 var canon = Array(rows * rows)
               .fill(0)
               .map(function(el, i){return i});
-console.log(canon)
 
 //Random arrangement params
 var n = 100; var maxDim = 4; var scope = 50;
@@ -236,8 +235,6 @@ function anim() {
 }
 
 function rotateGroup(indices, axis, dir) {
-  console.log("indices");
-  console.log([indices]);
   /*var group = new THREE.Group();
   indices.map(function(i) {group.add(objects[i])});
   scene.add(group);*/
@@ -258,11 +255,13 @@ function rotateGroup(indices, axis, dir) {
         requestAnimationFrame(animGroup);
       }
       else {
+        console.log(objects[indices[0]].rotation);
         var delta = dir * ( finalRot - Math.abs(count - incr)) ;
         q.setFromAxisAngle(axis, delta);
         for(var i = 0; i < indices.length; i++) {
           objects[indices[i]].quaternion.premultiply(q);//setRotationFromAxisAngle ( axis, limit )//rotateOnAxis(axis, incr);
         }
+        console.log(objects[indices[0]].rotation);
         //group.rotateOnAxis(axis, dir * delta);
         updateRefs(indices, dir);
       }
@@ -359,7 +358,6 @@ function makeMove(intersectA, intersectB) {
   dir = normal.x + normal.y + normal.z;
   var indices = getGroup(normal, index);
   rotateGroup(indices, normal, dir);
-  arr = [];
 }
 
 //Cross product
@@ -374,23 +372,10 @@ function cross(u, v) {
 /* given a rotation axis and direction 
  update cubes and objects arrays indices */ 
 function updateRefs(indices, dir) {
-  console.log("objects before updateRefs");
-  var res = [];
-  for(var i = 0; i < objects.length; i++){
-    res.push(objects[i].name);
-  }
-  console.log(res);
-  var rotated = rotateIndices(dir);
-  var clone = objects.slice(0);
+  var rotated = rotateIndices(indices, dir);
   for(var i = 0; i < indices.length; i++) {
-    objects[indices[i]] = clone[indices[rotated[i]]];
+    objects = swap(objects, indices[i], indices[rotated[i]]);
   }
-  console.log("objects after updateRefs");
-  res = [];
-  for(var i = 0; i < objects.length; i++){
-    res.push(objects[i].name);
-  }
-  console.log(res);
 }
 
 function swap(arr, i, j) {
@@ -415,5 +400,3 @@ function rotateIndices(dir) {
   }
   return res;
 }
- 
-
